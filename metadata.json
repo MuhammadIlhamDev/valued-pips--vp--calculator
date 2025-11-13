@@ -1,0 +1,5 @@
+{
+  "name": "Valued Pips (VP) Calculator",
+  "description": "An interactive calculator to simulate Valued Pips (VP) and TF Point earnings based on the TF Copy Signal reward system. Users can select their analyst level, input pips for various currency pairs, and calculate their potential rewards.",
+  "requestFramePermissions": []
+}
