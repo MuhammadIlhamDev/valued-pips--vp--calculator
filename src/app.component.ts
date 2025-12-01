@@ -60,7 +60,12 @@ export class AppComponent {
   ];
 
   readonly PARTNERSHIP_TIERS: PartnershipTier[] = ['Basic', 'Prospect', 'Priority'];
+  readonly UNIQUE_PAIR_VALUES = [...new Set(this.PAIRS.map(p => p.value))].sort((a, b) => b - a);
   
+  // Signals for view management
+  activeView: WritableSignal<'main' | 'simulation'> = signal('main');
+  isMenuOpen = signal(false);
+
   // Signals for main calculator
   calculations: WritableSignal<PairCalculation[]> = signal(this.createInitialCalculations());
   selectedLevel: WritableSignal<Level> = signal(this.LEVELS[0]);
@@ -71,8 +76,26 @@ export class AppComponent {
 
   // Signals for VP -> Pips & Percentage calculator
   targetVp = signal(0);
-  pipsFromVp = computed(() => this.targetVp() / 0.5);
+  losingTrades = signal(0);
+  lossPerTradeVp = signal(125);
+  selectedVpCalcValue = signal(0.5);
+  pipsFromVp = computed(() => this.selectedVpCalcValue() > 0 ? this.targetVp() / this.selectedVpCalcValue() : 0);
   percentageFromVp = computed(() => this.pipsFromVp() / 250);
+  remainingVp = computed(() => this.targetVp() - (this.losingTrades() * this.lossPerTradeVp()));
+
+  // Signals for TF Point Deduction Simulation
+  lossVpInput = computed(() => -(this.losingTrades() * this.lossPerTradeVp()));
+  selectedLossLevel: WritableSignal<Level> = signal(this.LEVELS[0]);
+
+  isDeductionApplied = computed(() => this.lossVpInput() <= -300);
+  
+  totalPointDeduction = computed(() => {
+    if (!this.isDeductionApplied()) {
+      return 0;
+    }
+    const multiplier = this.selectedLossLevel().multiplier;
+    return this.lossVpInput() * multiplier;
+  });
 
   availablePartnershipTiers = computed(() => {
     const level = this.selectedLevel();
@@ -122,6 +145,14 @@ export class AppComponent {
     return '';
   });
 
+  setView(view: 'main' | 'simulation'): void {
+    this.activeView.set(view);
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen.update(v => !v);
+  }
+
   private createInitialCalculations(): PairCalculation[] {
     return this.PAIRS.map(pair => ({
       ...pair,
@@ -163,6 +194,29 @@ export class AppComponent {
     this.targetVp.set(Number(input.value) || 0);
   }
 
+  handleLosingTradesInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.losingTrades.set(Number(input.value) || 0);
+  }
+
+  handleLossPerTradeInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.lossPerTradeVp.set(Number(input.value) || 0);
+  }
+
+  handleVpCalcValueChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.selectedVpCalcValue.set(Number(select.value));
+  }
+  
+  handleLossLevelChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const selectedLevel = this.LEVELS.find(level => level.name === select.value);
+    if (selectedLevel) {
+      this.selectedLossLevel.set(selectedLevel);
+    }
+  }
+
   calculate(): void {
     const totalVP = this.calculations().reduce((acc, curr) => acc + curr.valuedPips(), 0);
     this.totalValuedPips.set(totalVP);
@@ -182,6 +236,13 @@ export class AppComponent {
     this.selectedLevel.set(this.LEVELS[0]);
     this.pointsToRedeem.set(0);
     this.selectedPartnershipTier.set('Basic');
+    this.targetVp.set(0);
+    this.losingTrades.set(0);
+    this.lossPerTradeVp.set(125);
+    this.selectedVpCalcValue.set(0.5);
+    this.selectedLossLevel.set(this.LEVELS[0]);
+    this.activeView.set('main');
+    this.isMenuOpen.set(false);
   }
 
   formatNumber(num: number): string {

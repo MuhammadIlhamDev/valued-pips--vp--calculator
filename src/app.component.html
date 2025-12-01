@@ -1,194 +1,308 @@
-<main class="min-h-screen bg-white text-brand-dark flex items-center justify-center p-4 font-sans">
-  <div class="w-full max-w-4xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-2xl shadow-gray-200/60 border border-gray-200 overflow-hidden">
-      
-      <div class="p-6 md:p-8 text-center border-b border-gray-200">
-        <h1 class="text-3xl md:text-4xl font-bold text-brand-dark">Valued Pips (VP) Calculator</h1>
-        <p class="mt-2 text-gray-600">Simulate your potential TF Point earnings and redemptions.</p>
-      </div>
-
-      <!-- VP to Pips & Percentage Calculator -->
-      <div class="p-6 md:p-8 border-b border-gray-200">
-        <h2 class="text-2xl font-bold text-brand-dark mb-4 text-center">Kalkulator VP → Pips & Persentase</h2>
-        <div class="max-w-md mx-auto">
-          <div class="mb-4">
-            <label for="target-vp" class="block text-lg font-semibold text-brand-dark mb-2">Input Target VP:</label>
-            <input 
-              id="target-vp"
-              type="number"
-              class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none"
-              placeholder="0"
-              [value]="targetVp()"
-              (input)="handleTargetVpInput($event)"
-            />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
-              <p class="text-gray-600 text-sm">Total Pips</p>
-              <p class="text-3xl font-mono font-bold text-brand-dark mt-1">
-                {{ formatNumber(pipsFromVp()) }}
-              </p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
-              <p class="text-gray-600 text-sm">Persentase</p>
-              <p class="text-3xl font-mono font-bold text-brand-dark mt-1">
-                {{ formatPercentage(percentageFromVp()) }}%
-              </p>
-            </div>
+<div class="min-h-screen bg-gray-50 text-brand-dark font-sans">
+  <!-- Navbar -->
+  <nav class="bg-brand-dark shadow-lg sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex justify-between">
+        <div class="flex space-x-7">
+          <div>
+            <!-- Website Logo -->
+            <a (click)="setView('main')" class="flex items-center py-4 px-2 cursor-pointer">
+              <span class="font-bold text-white text-lg">TF VP Calculator</span>
+            </a>
           </div>
         </div>
+        <!-- Primary Navbar items -->
+        <div class="hidden md:flex items-center space-x-1">
+          <button (click)="setView('main')" 
+                  class="py-4 px-2 font-semibold transition duration-300"
+                  [class.text-white]="activeView() === 'main'"
+                  [class.border-b-4]="activeView() === 'main'"
+                  [class.border-brand-green]="activeView() === 'main'"
+                  [class.text-gray-400]="activeView() !== 'main'"
+                  [class.hover:text-white]="activeView() !== 'main'">
+            VP Calculator
+          </button>
+          <button (click)="setView('simulation')" 
+                  class="py-4 px-2 font-semibold transition duration-300"
+                  [class.text-white]="activeView() === 'simulation'"
+                  [class.border-b-4]="activeView() === 'simulation'"
+                  [class.border-brand-green]="activeView() === 'simulation'"
+                  [class.text-gray-400]="activeView() !== 'simulation'"
+                  [class.hover:text-white]="activeView() !== 'simulation'">
+            Loss Simulator
+          </button>
+        </div>
+        <!-- Mobile menu button -->
+        <div class="md:hidden flex items-center">
+          <button (click)="toggleMenu()" class="outline-none mobile-menu-button p-2">
+            @if (!isMenuOpen()) {
+              <svg class="w-6 h-6 text-gray-200 hover:text-white" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            } @else {
+              <svg class="w-6 h-6 text-gray-200 hover:text-white" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            }
+          </button>
+        </div>
       </div>
+    </div>
+    <!-- mobile menu -->
+    <div [class.hidden]="!isMenuOpen()" class="md:hidden mobile-menu">
+      <ul class="">
+        <li>
+          <button (click)="setView('main'); toggleMenu()" 
+                  class="block w-full text-left text-sm px-4 py-4 font-semibold transition duration-300"
+                  [class.bg-brand-green]="activeView() === 'main'"
+                  [class.text-white]="activeView() === 'main'"
+                  [class.text-gray-300]="activeView() !== 'main'"
+                  [class.hover:bg-brand-green]="activeView() !== 'main'"
+                  [class.hover:text-white]="activeView() !== 'main'">
+            VP Calculator
+          </button>
+        </li>
+        <li>
+          <button (click)="setView('simulation'); toggleMenu()" 
+                  class="block w-full text-left text-sm px-4 py-4 font-semibold transition duration-300"
+                  [class.bg-brand-green]="activeView() === 'simulation'"
+                  [class.text-white]="activeView() === 'simulation'"
+                  [class.text-gray-300]="activeView() !== 'simulation'"
+                  [class.hover:bg-brand-green]="activeView() !== 'simulation'"
+                  [class.hover:text-white]="activeView() !== 'simulation'">
+            Loss Simulator
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
-      <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Calculator Inputs -->
-        <div class="lg:col-span-2">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-            <label for="level-select" class="text-lg font-semibold text-brand-dark">Select Level:</label>
-            <select id="level-select" 
-                    class="w-full sm:w-auto bg-gray-50 border border-gray-300 text-brand-dark rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none transition"
-                    [value]="selectedLevel().name"
-                    (change)="handleLevelChange($event)">
-              @for (level of LEVELS; track level.name) {
-                <option [value]="level.name">{{ level.name }}</option>
-              }
-            </select>
+  <!-- Main Content -->
+  <main class="p-4 md:p-6">
+    <div class="w-full max-w-4xl mx-auto">
+      @if (activeView() === 'main') {
+        <div class="bg-white rounded-2xl shadow-2xl shadow-gray-200/60 border border-gray-200 overflow-hidden">
+          <div class="p-6 md:p-8 text-center border-b border-gray-200">
+            <h1 class="text-3xl md:text-4xl font-bold text-brand-dark">Valued Pips (VP) Calculator</h1>
+            <p class="mt-2 text-gray-600">Simulate your potential TF Point earnings and redemptions.</p>
           </div>
+          <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Calculator Inputs -->
+            <div class="lg:col-span-2">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+                <label for="level-select" class="text-lg font-semibold text-brand-dark">Select Level:</label>
+                <select id="level-select" class="w-full sm:w-auto bg-gray-50 border border-gray-300 text-brand-dark rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none transition" [value]="selectedLevel().name" (change)="handleLevelChange($event)">
+                  @for (level of LEVELS; track level.name) {
+                  <option [value]="level.name">{{ level.name }}</option>
+                  }
+                </select>
+              </div>
 
-          <!-- Partnership Tier Selector -->
-          @if (availablePartnershipTiers().length > 0) {
-            <div class="mb-6">
-              <label class="text-lg font-semibold text-brand-dark mb-3 block">Partnership Tier:</label>
-              <div class="flex flex-wrap gap-2">
-                @for (tier of availablePartnershipTiers(); track tier) {
-                  <button 
-                    type="button"
-                    (click)="handlePartnershipChange(tier)"
-                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    [class.bg-brand-green]="selectedPartnershipTier() === tier"
-                    [class.text-white]="selectedPartnershipTier() === tier"
-                    [class.bg-gray-200]="selectedPartnershipTier() !== tier"
-                    [class.text-gray-700]="selectedPartnershipTier() !== tier"
-                    [class.hover:bg-gray-300]="selectedPartnershipTier() !== tier"
-                    >
+              <!-- Partnership Tier Selector -->
+              @if (availablePartnershipTiers().length > 0) {
+              <div class="mb-6">
+                <label class="text-lg font-semibold text-brand-dark mb-3 block">Partnership Tier:</label>
+                <div class="flex flex-wrap gap-2">
+                  @for (tier of availablePartnershipTiers(); track tier) {
+                  <button type="button" (click)="handlePartnershipChange(tier)" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors" [class.bg-brand-green]="selectedPartnershipTier() === tier" [class.text-white]="selectedPartnershipTier() === tier" [class.bg-gray-200]="selectedPartnershipTier() !== tier" [class.text-gray-700]="selectedPartnershipTier() !== tier" [class.hover:bg-gray-300]="selectedPartnershipTier() !== tier">
                     {{ tier }} Channel
                   </button>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Pairs List -->
-          <div class="space-y-3 max-h-[60vh] lg:max-h-[calc(100vh-450px)] overflow-y-auto pr-2">
-            @for (pair of calculations(); track pair.symbol) {
-              <div class="grid grid-cols-4 gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div class="col-span-1">
-                  <span class="font-bold text-brand-dark">{{ pair.symbol }}</span>
-                  <span class="text-xs text-gray-500 block">Value: {{ pair.value }}</span>
-                </div>
-                <div class="col-span-2 flex items-center gap-2">
-                  <input type="number" 
-                         class="w-full bg-white border border-gray-300 text-brand-dark text-right rounded-md p-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" 
-                         placeholder="0.0" 
-                         [value]="pair.pips()"
-                         (input)="handlePipsInput($event, pair)">
-                  <span class="text-gray-500">Pips</span>
-                </div>
-                <div class="col-span-1 text-right">
-                  <span class="font-mono text-lg"
-                        [class.text-brand-green]="pair.valuedPips() > 0"
-                        [class.text-red-500]="pair.valuedPips() < 0"
-                        [class.text-gray-500]="pair.valuedPips() === 0">{{ formatNumber(pair.valuedPips()) }}</span>
-                  <span class="text-xs text-gray-400 block">VP</span>
+                  }
                 </div>
               </div>
-            }
-          </div>
-        </div>
-
-        <!-- Results & Actions -->
-        <div class="lg:col-span-1 flex flex-col justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-brand-dark mb-4 border-b border-gray-200 pb-2">Results</h2>
-            <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
-              <p class="text-gray-600 text-sm">Total Valued Pips (VP)</p>
-              <p class="text-4xl font-mono font-bold"
-                 [class.text-brand-green]="totalValuedPips() > 0"
-                 [class.text-red-500]="totalValuedPips() < 0"
-                 [class.text-brand-dark]="totalValuedPips() === 0">
-                {{ formatNumber(totalValuedPips()) }}
-              </p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p class="text-gray-600 text-sm">TF Point</p>
-              <p class="text-4xl font-mono font-bold"
-                  [class.text-brand-dark]="tfPoints() != 0"
-                  [class.text-gray-500]="tfPoints() === 0">
-                {{ tfPoints().toLocaleString('en-US', { maximumFractionDigits: 0 }) }}
-              </p>
-              @if (totalValuedPips() > 0 && totalValuedPips() < 300) {
-                <p class="text-yellow-600 text-xs mt-2">Requires a minimum of 300.0 VP to earn TF Points.</p>
               }
-            </div>
 
-            <!-- Redemption Section -->
-            <div class="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-200">
-              <div class="flex justify-between items-start">
-                <h3 class="text-lg font-semibold text-brand-dark">Redeem Points</h3>
-                <div class="text-right">
-                  <p class="text-xs text-gray-500">Total: {{ tfPoints().toLocaleString() }}</p>
-                  @if (redeemablePercentage() > 0) {
-                    <p class="text-xs text-brand-green font-semibold">
-                      Redeemable ({{ redeemablePercentage() * 100 }}%): {{ redeemablePointsBalance().toLocaleString() }}
-                    </p>
-                  }
+              <!-- Pairs List -->
+              <div class="space-y-3 max-h-[60vh] lg:max-h-[calc(100vh-500px)] overflow-y-auto pr-2">
+                @for (pair of calculations(); track pair.symbol) {
+                <div class="grid grid-cols-4 gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div class="col-span-1">
+                    <span class="font-bold text-brand-dark">{{ pair.symbol }}</span>
+                    <span class="text-xs text-gray-500 block">Value: {{ pair.value }}</span>
+                  </div>
+                  <div class="col-span-2 flex items-center gap-2">
+                    <input type="number" class="w-full bg-white border border-gray-300 text-brand-dark text-right rounded-md p-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" placeholder="0.0" [value]="pair.pips()" (input)="handlePipsInput($event, pair)">
+                    <span class="text-gray-500">Pips</span>
+                  </div>
+                  <div class="col-span-1 text-right">
+                    <span class="font-mono text-lg" [class.text-brand-green]="pair.valuedPips() > 0" [class.text-red-500]="pair.valuedPips() < 0" [class.text-gray-500]="pair.valuedPips() === 0">{{ formatNumber(pair.valuedPips()) }}</span>
+                    <span class="text-xs text-gray-400 block">VP</span>
+                  </div>
                 </div>
-              </div>
-              
-              <div class="mt-3">
-                @if (selectedLevel().redemptionRate > 0) {
-                  <div>
-                    <label for="redeem-points" class="text-xs text-gray-400">Amount to redeem (multiple of 100)</label>
-                    <input 
-                      id="redeem-points"
-                      type="number"
-                      step="100"
-                      min="0"
-                      class="w-full bg-white border border-gray-300 text-brand-dark rounded-md p-2 mt-1 focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none"
-                      placeholder="0"
-                      [value]="pointsToRedeem()"
-                      (input)="handleRedemptionInput($event)"
-                    />
-                  </div>
-                  <div class="mt-4 text-center bg-white rounded-lg p-3 border border-gray-200">
-                    <p class="text-gray-500 text-sm">Estimated Cash Value</p>
-                    <p class="text-3xl font-mono font-bold text-brand-green mt-1">
-                      {{ formatCurrency(redeemedCashValue()) }}
-                    </p>
-                  </div>
-                  @if(redemptionMessage()) {
-                    <p class="text-yellow-600 text-xs mt-2 text-center">{{ redemptionMessage() }}</p>
-                  }
-                } @else {
-                  <div class="text-center py-8">
-                     <p class="text-gray-500 text-sm">Redemption is available for Elite level and above.</p>
-                  </div>
                 }
               </div>
             </div>
 
-          </div>
-          
-          <div class="mt-8 flex flex-col gap-3">
-            <button (click)="calculate()" class="w-full bg-brand-green hover:bg-brand-dark text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105">
-              Calculate
-            </button>
-            <button (click)="reset()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out">
-              Reset
-            </button>
+            <!-- Results & Actions -->
+            <div class="lg:col-span-1 flex flex-col justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-brand-dark mb-4 border-b border-gray-200 pb-2">Results</h2>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                  <p class="text-gray-600 text-sm">Total Valued Pips (VP)</p>
+                  <p class="text-4xl font-mono font-bold" [class.text-brand-green]="totalValuedPips() > 0" [class.text-red-500]="totalValuedPips() < 0" [class.text-brand-dark]="totalValuedPips() === 0">
+                    {{ formatNumber(totalValuedPips()) }}
+                  </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p class="text-gray-600 text-sm">TF Point</p>
+                  <p class="text-4xl font-mono font-bold" [class.text-brand-dark]="tfPoints() != 0" [class.text-gray-500]="tfPoints() === 0">
+                    {{ tfPoints().toLocaleString('en-US', { maximumFractionDigits: 0 }) }}
+                  </p>
+                  @if (totalValuedPips() > 0 && totalValuedPips() < 300) {
+                  <p class="text-yellow-600 text-xs mt-2">Requires a minimum of 300.0 VP to earn TF Points.</p>
+                  }
+                </div>
+
+                <!-- Redemption Section -->
+                <div class="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-200">
+                  <div class="flex justify-between items-start">
+                    <h3 class="text-lg font-semibold text-brand-dark">Redeem Points</h3>
+                    <div class="text-right">
+                      <p class="text-xs text-gray-500">Total: {{ tfPoints().toLocaleString() }}</p>
+                      @if (redeemablePercentage() > 0) {
+                      <p class="text-xs text-brand-green font-semibold">
+                        Redeemable ({{ redeemablePercentage() * 100 }}%): {{ redeemablePointsBalance().toLocaleString() }}
+                      </p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    @if (selectedLevel().redemptionRate > 0) {
+                    <div>
+                      <label for="redeem-points" class="text-xs text-gray-400">Amount to redeem (multiple of 100)</label>
+                      <input id="redeem-points" type="number" step="100" min="0" class="w-full bg-white border border-gray-300 text-brand-dark rounded-md p-2 mt-1 focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" placeholder="0" [value]="pointsToRedeem()" (input)="handleRedemptionInput($event)" />
+                    </div>
+                    <div class="mt-4 text-center bg-white rounded-lg p-3 border border-gray-200">
+                      <p class="text-gray-500 text-sm">Estimated Cash Value</p>
+                      <p class="text-3xl font-mono font-bold text-brand-green mt-1">
+                        {{ formatCurrency(redeemedCashValue()) }}
+                      </p>
+                    </div>
+                    @if(redemptionMessage()) {
+                    <p class="text-yellow-600 text-xs mt-2 text-center">{{ redemptionMessage() }}</p>
+                    }
+                    } @else {
+                    <div class="text-center py-8">
+                      <p class="text-gray-500 text-sm">Redemption is available for Elite level and above.</p>
+                    </div>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-8 flex flex-col gap-3">
+                <button (click)="calculate()" class="w-full bg-brand-green hover:bg-brand-dark text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105">
+                  Calculate
+                </button>
+                <button (click)="reset()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out">
+                  Reset
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
+      }
+      @if (activeView() === 'simulation') {
+        <div class="bg-white rounded-2xl shadow-2xl shadow-gray-200/60 border border-gray-200 overflow-hidden">
+          <div class="p-6 md:p-8 text-center border-b border-gray-200">
+            <h1 class="text-3xl md:text-4xl font-bold text-brand-dark">Loss & Deduction Simulator</h1>
+            <p class="mt-2 text-gray-600">Analyze potential losses and their impact on TF Points.</p>
+          </div>
+          <!-- VP to Pips & Percentage Calculator -->
+          <div class="p-6 md:p-8 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-brand-dark mb-6 text-center">Kalkulator VP → Pips & Persentase</h2>
+            <div class="max-w-xl mx-auto">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 mb-6">
+                <div>
+                  <label for="target-vp" class="block text-lg font-semibold text-brand-dark mb-2">Input Target VP:</label>
+                  <input id="target-vp" type="number" class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" placeholder="0" [value]="targetVp()" (input)="handleTargetVpInput($event)" />
+                </div>
+                <div>
+                  <label for="vp-calc-value" class="block text-lg font-semibold text-brand-dark mb-2">Value Pair:</label>
+                  <select id="vp-calc-value" class="w-full bg-gray-50 border border-gray-300 text-brand-dark rounded-lg px-3 py-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none transition text-center" [value]="selectedVpCalcValue()" (change)="handleVpCalcValueChange($event)">
+                    @for (value of UNIQUE_PAIR_VALUES; track value) {
+                    <option [value]="value">{{ value }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label for="losing-trades" class="block text-lg font-semibold text-brand-dark mb-2">Jumlah Trade Rugi:</label>
+                  <input id="losing-trades" type="number" class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" placeholder="0" [value]="losingTrades()" (input)="handleLosingTradesInput($event)" />
+                </div>
+                <div>
+                  <label for="loss-per-trade" class="block text-lg font-semibold text-brand-dark mb-2">VP Rugi per Trade:</label>
+                  <input id="loss-per-trade" type="number" class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" placeholder="125" [value]="lossPerTradeVp()" (input)="handleLossPerTradeInput($event)" />
+                </div>
+              </div>
+              <!-- Results -->
+              <div class="space-y-2">
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 flex justify-between items-center">
+                  <p class="text-gray-600">Total Pips (dari Target VP)</p>
+                  <p class="text-xl font-mono font-bold text-brand-dark mt-1">
+                    {{ formatNumber(pipsFromVp()) }}
+                  </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 flex justify-between items-center">
+                  <p class="text-gray-600">Persentase (dari Target VP)</p>
+                  <p class="text-xl font-mono font-bold text-brand-dark mt-1">
+                    {{ formatPercentage(percentageFromVp()) }}%
+                  </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center mt-4">
+                  <p class="text-gray-800 font-semibold">Sisa VP (setelah kerugian)</p>
+                  <p class="text-4xl font-mono font-bold mt-1" [class.text-brand-green]="remainingVp() >= 0" [class.text-red-600]="remainingVp() < 0">
+                    {{ formatNumber(remainingVp()) }} VP
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- TF Point Deduction Simulation -->
+          <div class="p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-brand-dark mb-6 text-center">Simulasi Pengurangan TF Point</h2>
+            <div class="max-w-xl mx-auto">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label for="loss-vp-input" class="block text-lg font-semibold text-brand-dark mb-2">Total VP Loss (Otomatis):</label>
+                  <input id="loss-vp-input" type="number" class="w-full bg-gray-100 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-red-400 focus:border-red-400 focus:outline-none disabled:cursor-not-allowed" placeholder="0" [value]="lossVpInput()" disabled />
+                </div>
+                <div>
+                  <label for="loss-level-select" class="block text-lg font-semibold text-brand-dark mb-2">Pilih Level Analyst:</label>
+                  <select id="loss-level-select" class="w-full bg-white border border-gray-300 text-brand-dark rounded-lg px-3 py-3 text-2xl focus:ring-2 focus:ring-red-400 focus:border-red-400 focus:outline-none transition text-center" [value]="selectedLossLevel().name" (change)="handleLossLevelChange($event)">
+                    @for (level of LEVELS; track level.name) {
+                    <option [value]="level.name">{{ level.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <!-- Deduction Results -->
+              <div class="space-y-2">
+                <div class="bg-white rounded-lg p-3 border border-gray-200 flex justify-between items-center">
+                  <p class="text-gray-600">Kondisi</p>
+                  @if (isDeductionApplied()) {
+                  <span class="px-3 py-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-full">Pengurangan Diterapkan</span>
+                  } @else {
+                  <span class="px-3 py-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-full">Tidak Ada Pengurangan (Loss &lt; 300 VP)</span>
+                  }
+                </div>
+                <div class="bg-white rounded-lg p-3 border border-gray-200 flex justify-between items-center">
+                  <p class="text-gray-600">Perkalian Loss</p>
+                  <p class="text-xl font-mono font-bold text-brand-dark mt-1">
+                    x{{ selectedLossLevel().multiplier }}
+                  </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center mt-4">
+                  <p class="text-gray-800 font-semibold">Total Pengurangan TF Point</p>
+                  <p class="text-4xl font-mono font-bold mt-1 text-red-600">
+                    {{ formatNumber(totalPointDeduction()) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
-  </div>
-</main>
+  </main>
+</div>
