@@ -61,12 +61,18 @@ export class AppComponent {
 
   readonly PARTNERSHIP_TIERS: PartnershipTier[] = ['Basic', 'Prospect', 'Priority'];
   
+  // Signals for main calculator
   calculations: WritableSignal<PairCalculation[]> = signal(this.createInitialCalculations());
   selectedLevel: WritableSignal<Level> = signal(this.LEVELS[0]);
   selectedPartnershipTier: WritableSignal<PartnershipTier> = signal('Basic');
   totalValuedPips = signal(0);
   tfPoints = signal(0);
   pointsToRedeem = signal(0);
+
+  // Signals for VP -> Pips & Percentage calculator
+  targetVp = signal(0);
+  pipsFromVp = computed(() => this.targetVp() / 0.5);
+  percentageFromVp = computed(() => this.pipsFromVp() / 250);
 
   availablePartnershipTiers = computed(() => {
     const level = this.selectedLevel();
@@ -152,6 +158,11 @@ export class AppComponent {
     this.pointsToRedeem.set(Number(input.value) || 0);
   }
 
+  handleTargetVpInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.targetVp.set(Number(input.value) || 0);
+  }
+
   calculate(): void {
     const totalVP = this.calculations().reduce((acc, curr) => acc + curr.valuedPips(), 0);
     this.totalValuedPips.set(totalVP);
@@ -175,6 +186,10 @@ export class AppComponent {
 
   formatNumber(num: number): string {
     return num.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  formatPercentage(num: number): string {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   formatCurrency(value: number): string {

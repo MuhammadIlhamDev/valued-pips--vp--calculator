@@ -7,6 +7,38 @@
         <p class="mt-2 text-gray-600">Simulate your potential TF Point earnings and redemptions.</p>
       </div>
 
+      <!-- VP to Pips & Percentage Calculator -->
+      <div class="p-6 md:p-8 border-b border-gray-200">
+        <h2 class="text-2xl font-bold text-brand-dark mb-4 text-center">Kalkulator VP → Pips & Persentase</h2>
+        <div class="max-w-md mx-auto">
+          <div class="mb-4">
+            <label for="target-vp" class="block text-lg font-semibold text-brand-dark mb-2">Input Target VP:</label>
+            <input 
+              id="target-vp"
+              type="number"
+              class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none"
+              placeholder="0"
+              [value]="targetVp()"
+              (input)="handleTargetVpInput($event)"
+            />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+              <p class="text-gray-600 text-sm">Total Pips</p>
+              <p class="text-3xl font-mono font-bold text-brand-dark mt-1">
+                {{ formatNumber(pipsFromVp()) }}
+              </p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+              <p class="text-gray-600 text-sm">Persentase</p>
+              <p class="text-3xl font-mono font-bold text-brand-dark mt-1">
+                {{ formatPercentage(percentageFromVp()) }}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Calculator Inputs -->
         <div class="lg:col-span-2">
@@ -46,7 +78,7 @@
           }
 
           <!-- Pairs List -->
-          <div class="space-y-3 max-h-[60vh] lg:max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
+          <div class="space-y-3 max-h-[60vh] lg:max-h-[calc(100vh-450px)] overflow-y-auto pr-2">
             @for (pair of calculations(); track pair.symbol) {
               <div class="grid grid-cols-4 gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
                 <div class="col-span-1">
