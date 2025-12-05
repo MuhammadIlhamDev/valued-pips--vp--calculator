@@ -249,9 +249,9 @@
                     {{ formatPercentage(percentageFromVp()) }}%
                   </p>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center mt-4">
-                  <p class="text-gray-800 font-semibold">Sisa VP (setelah kerugian)</p>
-                  <p class="text-4xl font-mono font-bold mt-1" [class.text-brand-green]="remainingVp() >= 0" [class.text-red-600]="remainingVp() < 0">
+                <div class="bg-gray-50 rounded-lg p-4 border text-center mt-4">
+                  <p class="text-gray-600 font-semibold">Sisa VP (setelah kerugian)</p>
+                  <p class="text-4xl font-mono font-bold mt-1" [class.text-[#00B451]]="remainingVp() >= 0" [class.text-red-600]="remainingVp() < 0">
                     {{ formatNumber(remainingVp()) }} VP
                   </p>
                 </div>
@@ -259,7 +259,7 @@
             </div>
           </div>
           <!-- TF Point Deduction Simulation -->
-          <div class="p-6 md:p-8">
+          <div class="p-6 md:p-8 ">
             <h2 class="text-2xl font-bold text-brand-dark mb-6 text-center">Simulasi Pengurangan TF Point</h2>
             <div class="max-w-xl mx-auto">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -269,7 +269,7 @@
                 </div>
                 <div>
                   <label for="loss-level-select" class="block text-lg font-semibold text-brand-dark mb-2">Pilih Level Analyst:</label>
-                  <select id="loss-level-select" class="w-full bg-white border border-gray-300 text-brand-dark rounded-lg px-3 py-3 text-2xl focus:ring-2 focus:ring-red-400 focus:border-red-400 focus:outline-none transition text-center" [value]="selectedLossLevel().name" (change)="handleLossLevelChange($event)">
+                  <select id="loss-level-select" class="w-full bg-white border border-gray-300 text-brand-dark rounded-lg px-3 py-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none transition text-center" [value]="selectedLossLevel().name" (change)="handleLossLevelChange($event)">
                     @for (level of LEVELS; track level.name) {
                     <option [value]="level.name">{{ level.name }}</option>
                     }
@@ -281,7 +281,7 @@
                 <div class="bg-white rounded-lg p-3 border border-gray-200 flex justify-between items-center">
                   <p class="text-gray-600">Kondisi</p>
                   @if (isDeductionApplied()) {
-                  <span class="px-3 py-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-full">Pengurangan Diterapkan</span>
+                  <span class="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">Pengurangan Diterapkan</span>
                   } @else {
                   <span class="px-3 py-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-full">Tidak Ada Pengurangan (Loss &lt; 300 VP)</span>
                   }
@@ -292,14 +292,72 @@
                     x{{ selectedLossLevel().multiplier }}
                   </p>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center mt-4">
-                  <p class="text-gray-800 font-semibold">Total Pengurangan TF Point</p>
+                <div class="rounded-lg p-4 border text-center mt-4">
+                  <p class="text-gray-600 font-semibold">Total Pengurangan TF Point</p>
                   <p class="text-4xl font-mono font-bold mt-1 text-red-600">
                     {{ formatNumber(totalPointDeduction()) }}
                   </p>
                 </div>
               </div>
             </div>
+          </div>
+          <!-- Medal Deduction Simulator -->
+          <div class="p-6 md:p-8 border-t-2 border-gray-200 mt-2">
+              <h2 class="text-2xl font-bold text-brand-dark mb-6 text-center">Simulasi Penurunan TF Medal</h2>
+              <div class="max-w-xl mx-auto">
+                  <!-- Inputs -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                      <div>
+                          <label for="current-medals" class="block text-lg font-semibold text-brand-dark mb-2">Medal Anda Saat Ini:</label>
+                          <input id="current-medals" type="number" class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-3 text-2xl focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" placeholder="0" [value]="currentMedals()" (input)="handleCurrentMedalsInput($event)">
+                      </div>
+                      <div class="sm:col-span-2">
+                          <label class="block text-lg font-semibold text-brand-dark mb-2">History VP 6 Bulan Terakhir:</label>
+                          <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mt-2">
+                              @for (vp of monthlyVpHistory(); track $index) {
+                                  <input type="number" class="w-full bg-gray-50 border border-gray-300 text-brand-dark text-center rounded-md p-2 text-md focus:ring-2 focus:ring-brand-green focus:border-brand-green focus:outline-none" [placeholder]="'Bulan ' + ($index + 1)" [value]="vp === 0 ? '' : vp" (input)="handleVpHistoryInput($event, $index)">
+                              }
+                          </div>
+                      </div>
+                  </div>
+                  <!-- Results -->
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <h3 class="text-lg font-semibold text-brand-dark mb-4 text-center">Hasil Kalkulasi</h3>
+                      <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          <span class="text-gray-600">Average Monthly VP</span>
+                          <span class="text-right font-mono font-semibold">{{ formatNumber(averageMonthlyVp()) }}</span>
+                          
+                          <span class="text-gray-600">Monthly Loss %</span>
+                          <span class="text-right font-mono font-semibold" [class.text-red-600]="monthlyLossPercentage() > 100">{{ formatPercentage(monthlyLossPercentage()) }}%</span>
+                          
+                          <span class="text-gray-600">Monthly Medal Change</span>
+                          <span class="text-right font-mono font-semibold" [class.text-red-600]="monthlyMedalChange() < 0">{{ monthlyMedalChange() }}</span>
+                          
+                          <hr class="col-span-2 my-1"/>
+
+                          <span class="text-gray-600">Consecutive Loss %</span>
+                          <span class="text-right font-mono font-semibold" [class.text-red-600]="consecutiveLossPercentage() > 100">{{ formatPercentage(consecutiveLossPercentage()) }}%</span>
+
+                          <span class="text-gray-600">Consecutive Medal Change</span>
+                          <span class="text-right font-mono font-semibold" [class.text-red-600]="consecutiveMedalChange() < 0">{{ consecutiveMedalChange() }}</span>
+                      </div>
+
+                      <!-- Final Result -->
+                      <div class="mt-6 bg-white rounded-lg p-4 border border-gray-200 text-center">
+                          <p class="text-gray-600 font-semibold">Final Medal Change</p>
+                          <p class="text-5xl font-mono font-bold" [class.text-red-600]="finalMedalChange() < 0" [class.text-gray-600]="finalMedalChange() === 0">
+                            {{ finalMedalChange() }}
+                          </p>
+                      </div>
+                      <div class="mt-4 bg-white rounded-lg p-4 border border-gray-200 text-center">
+                          <p class="text-gray-600 font-semibold">Medal Akhir Setelah Penyesuaian</p>
+                          <p class="text-5xl font-mono font-bold text-brand-dark">{{ finalMedalCount() }}</p>
+                          @if(finalMedalCount() === 0 && currentMedals() > 0) {
+                            <p class="mt-2 text-sm font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full inline-block">Status: Kembali ke Newbie</p>
+                          }
+                      </div>
+                  </div>
+              </div>
           </div>
         </div>
       }

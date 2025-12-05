@@ -86,9 +86,7 @@ export class AppComponent {
   // Signals for TF Point Deduction Simulation
   lossVpInput = computed(() => -(this.losingTrades() * this.lossPerTradeVp()));
   selectedLossLevel: WritableSignal<Level> = signal(this.LEVELS[0]);
-
   isDeductionApplied = computed(() => this.lossVpInput() <= -300);
-  
   totalPointDeduction = computed(() => {
     if (!this.isDeductionApplied()) {
       return 0;
@@ -97,43 +95,83 @@ export class AppComponent {
     return this.lossVpInput() * multiplier;
   });
 
+  // Signals for Medal Deduction System
+  monthlyVpHistory = signal<number[]>([0, 0, 0, 0, 0, 0]);
+  currentMedals = signal(10);
+
+  averageMonthlyVp = computed(() => {
+    const qualifiedMonths = this.monthlyVpHistory().filter(vp => vp >= 300);
+    if (qualifiedMonths.length === 0) {
+      return 300;
+    }
+    const sum = qualifiedMonths.reduce((acc, vp) => acc + vp, 0);
+    return sum / qualifiedMonths.length;
+  });
+
+  monthlyLossPercentage = computed(() => {
+    const avgVp = this.averageMonthlyVp();
+    if (avgVp === 0) return 0;
+    return (Math.abs(this.lossVpInput()) / avgVp) * 100;
+  });
+
+  monthlyMedalChange = computed(() => this.getMonthlyMedalChange(this.monthlyLossPercentage()));
+
+  consecutiveLossVp = computed(() => {
+    let consecutiveLoss = 0;
+    const history = this.monthlyVpHistory();
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i] < 0) {
+        consecutiveLoss += history[i];
+      } else {
+        break; // Stop at first profitable month
+      }
+    }
+    return consecutiveLoss;
+  });
+
+  consecutiveLossPercentage = computed(() => {
+    const avgVp = this.averageMonthlyVp();
+    if (avgVp === 0) return 0;
+    return (Math.abs(this.consecutiveLossVp()) / avgVp) * 100;
+  });
+
+  consecutiveMedalChange = computed(() => this.getConsecutiveMedalChange(this.consecutiveLossPercentage()));
+
+  finalMedalChange = computed(() => this.monthlyMedalChange() + this.consecutiveMedalChange());
+
+  finalMedalCount = computed(() => Math.max(0, this.currentMedals() + this.finalMedalChange()));
+
+  // Signals for main calculator partnership logic
   availablePartnershipTiers = computed(() => {
     const level = this.selectedLevel();
     return this.PARTNERSHIP_TIERS.filter(tier => level.partnershipRedemption[tier] > 0);
   });
-
   redeemablePercentage = computed(() => {
     const level = this.selectedLevel();
     const tier = this.selectedPartnershipTier();
-    // Ensure the tier is valid for the level before getting the percentage
     if (level.partnershipRedemption[tier] > 0) {
       return level.partnershipRedemption[tier];
     }
     return 0;
   });
-
   redeemablePointsBalance = computed(() => {
     const totalPoints = this.tfPoints();
     const percentage = this.redeemablePercentage();
     return Math.floor(totalPoints * percentage);
   });
-  
   redeemedCashValue = computed(() => {
     const level = this.selectedLevel();
     const points = this.pointsToRedeem();
     const balance = this.redeemablePointsBalance();
-
     if (level.redemptionRate === 0 || points <= 0 || points > balance || points % 100 !== 0) {
       return 0;
     }
     return points * level.redemptionRate;
   });
-
   redemptionMessage = computed(() => {
     const level = this.selectedLevel();
     const points = this.pointsToRedeem();
     const balance = this.redeemablePointsBalance();
-
     if (level.redemptionRate > 0) {
         if (points > 0 && points > balance) {
         return 'Insufficient redeemable TF Point balance.';
@@ -144,6 +182,8 @@ export class AppComponent {
     }
     return '';
   });
+
+  // --- Methods ---
 
   setView(view: 'main' | 'simulation'): void {
     this.activeView.set(view);
@@ -160,7 +200,31 @@ export class AppComponent {
       valuedPips: signal(0),
     }));
   }
+
+  private getMonthlyMedalChange(percentage: number): number {
+    if (percentage <= 100) return 0;
+    if (percentage <= 150) return -1;
+    if (percentage <= 200) return -2;
+    if (percentage <= 250) return -3;
+    if (percentage <= 275) return -4;
+    if (percentage <= 300) return -5;
+    if (percentage <= 325) return -6;
+    return -7;
+  }
+
+  private getConsecutiveMedalChange(percentage: number): number {
+    if (percentage <= 100) return 0;
+    if (percentage <= 300) return -1;
+    if (percentage <= 500) return -2;
+    if (percentage <= 600) return -3;
+    if (percentage <= 650) return -4;
+    if (percentage <= 675) return -5;
+    if (percentage <= 700) return -6;
+    return -7;
+  }
   
+  // --- Event Handlers ---
+
   handlePipsInput(event: Event, pairCalc: PairCalculation): void {
     const input = event.target as HTMLInputElement;
     const pips = parseFloat(input.value) || 0;
@@ -173,7 +237,6 @@ export class AppComponent {
     const selectedLevel = this.LEVELS.find(level => level.name === select.value);
     if (selectedLevel) {
       this.selectedLevel.set(selectedLevel);
-      // If current partnership tier is not valid for the new level, reset to 'Basic'.
       if (selectedLevel.partnershipRedemption[this.selectedPartnershipTier()] === 0) {
         this.selectedPartnershipTier.set('Basic');
       }
@@ -217,6 +280,21 @@ export class AppComponent {
     }
   }
 
+  handleVpHistoryInput(event: Event, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value) || 0;
+    this.monthlyVpHistory.update(history => {
+      const newHistory = [...history];
+      newHistory[index] = value;
+      return newHistory;
+    });
+  }
+
+  handleCurrentMedalsInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.currentMedals.set(Number(input.value) || 0);
+  }
+
   calculate(): void {
     const totalVP = this.calculations().reduce((acc, curr) => acc + curr.valuedPips(), 0);
     this.totalValuedPips.set(totalVP);
@@ -241,12 +319,14 @@ export class AppComponent {
     this.lossPerTradeVp.set(125);
     this.selectedVpCalcValue.set(0.5);
     this.selectedLossLevel.set(this.LEVELS[0]);
+    this.monthlyVpHistory.set([0, 0, 0, 0, 0, 0]);
+    this.currentMedals.set(10);
     this.activeView.set('main');
     this.isMenuOpen.set(false);
   }
 
-  formatNumber(num: number): string {
-    return num.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  formatNumber(num: number, fractions = 1): string {
+    return num.toLocaleString('en-US', { minimumFractionDigits: fractions, maximumFractionDigits: fractions });
   }
 
   formatPercentage(num: number): string {
